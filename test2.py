@@ -158,8 +158,8 @@ if not os.path.exists(uploads_dir):
 
 
 # Create sidebar for navigation
-st.sidebar.title("Job App Assistant")
-tab = st.sidebar.radio("Select a Tab", ["CV Analyzer", "Job Description Generator"])
+st.sidebar.title("HR Process AI Automation")
+tab = st.sidebar.radio("Select a Tab", ["CV Analyzer", "Job Description Generator", "Generate QA", "LDA analysis"])
 
 
 
