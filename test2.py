@@ -150,6 +150,34 @@ def generate_job_description(job_role):
     st.write(result)
 
 
+# Function to generate Q&A based on candidate name
+def generate_qa(candidate_name, global_job_role):
+    # Initialize model and embeddings
+    repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
+    llm = HuggingFaceEndpoint(repo_id=repo_id, max_length=500, temperature=0.5, token=HUGGINGFACEHUB_API_TOKEN)
+
+    # Search for candidate in vector store
+    query = f"Retrieve information about the candidate named {candidate_name}."
+    qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=vector_store.as_retriever())
+    result = qa.invoke(query)
+
+    # If candidate not found, show message
+    if not result:
+        st.write(f"No resume found for candidate {candidate_name}. Please make sure the candidate exists in the database.")
+        return
+    
+    st.write(f"Resume found for {candidate_name}. Generating questions based on the resume and job description...")
+
+    # Generate 10 questions dynamically based on the candidate's resume and job description
+    question_prompt = f"Based on the resume and skills of {candidate_name} and {global_job_role}, generate a set of 10 interview questions."
+    
+    questions_result = llm(question_prompt)
+    
+    # Display the questions
+    st.write("Generated Questions:")
+    st.write(questions_result)
+
+
 # Create the "uploads" directory if it doesn't exist
 uploads_dir = "uploads"
 if not os.path.exists(uploads_dir):
@@ -161,7 +189,7 @@ if not os.path.exists(uploads_dir):
 st.sidebar.title("HR Process AI Automation")
 tab = st.sidebar.radio("Select a Tab", ["CV Analyzer", "Job Description Generator", "Generate QA", "LDA analysis"])
 
-
+global_job_role=''
 
 # Tab 1: CV Analyzer
 if tab == "CV Analyzer":
@@ -204,6 +232,15 @@ elif tab == "Job Description Generator":
     st.title("Job Description Generator")
     
     job_role = st.text_input("Enter the job role (e.g., Python Developer, Cloud Engineer):")
-    
+    global_job_role=job_role
     if st.button("Generate Job Description") and job_role:
         generate_job_description(job_role)
+
+# Tab 3: Generate Q nad A
+elif tab == "Generate QA":
+    st.title("Generate QA")
+    
+    candidate = st.text_input("Enter the name:")
+    
+    if st.button("Enter Name") and candidate:
+        generate_qa(candidate, global_job_role)
