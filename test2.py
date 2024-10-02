@@ -121,7 +121,33 @@ def ask_query(query):
     st.write(result['result'])
 
 
+# Add a function to trigger the resume summarization prompt automatically
+def summarize_resume():
+    repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
+    
+    llm = HuggingFaceEndpoint(
+        repo_id=repo_id, max_length=500, temperature=0.5, token=HUGGINGFACEHUB_API_TOKEN
+    )
+    # This will ask for the summarization of the resume
+    query = "Summarize the resume of the candidate."
+    qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=vector_store.as_retriever())
+    result = qa.invoke(query)
+    print(result)
+    
+    # Display the result on the Streamlit interface
+    st.write(result['result'])
+
 # ask_query(query)
+
+# Function to generate job description
+def generate_job_description(job_role):
+    repo_id = "mistralai/Mistral-7B-Instruct-v0.2"
+    llm = HuggingFaceEndpoint(repo_id=repo_id, max_length=500, temperature=0.5, token=HUGGINGFACEHUB_API_TOKEN)
+
+    job_description_prompt = f"Generate a job description for a {job_role}. Include the job title, required skills, and responsibilities."
+    result = llm(job_description_prompt)
+    st.caption("Detailed Job Decription")
+    st.write(result)
 
 
 # Create the "uploads" directory if it doesn't exist
@@ -131,31 +157,53 @@ if not os.path.exists(uploads_dir):
 
 
 
-st.title("Document Retrieval and Question Answering")
-
-uploaded_file = st.file_uploader("Upload a PDF document", type="pdf")
-
-if uploaded_file is not None:
-    # Generate a unique filename (optional)
-    filename = f"{os.path.splitext(uploaded_file.name)[0]}.pdf"  # Remove extension and add .pdf
-    unique_filename = filename
-    counter = 1
-    while os.path.exists(os.path.join(uploads_dir, unique_filename)):
-        unique_filename = f"{filename[:-4]}_{counter}.pdf"  # Add counter before extension
-        counter += 1
-
-    # Save the uploaded file in the "uploads" directory
-    with open(os.path.join(uploads_dir, unique_filename), "wb") as f:
-        f.write(uploaded_file.read())
-    path = os.path.join(uploads_dir, unique_filename)  # Update path with full directory
-    load_document(path)
-    st.success(f"Document uploaded and processed! (Saved as: {unique_filename})")
+# Create sidebar for navigation
+st.sidebar.title("Job App Assistant")
+tab = st.sidebar.radio("Select a Tab", ["CV Analyzer", "Job Description Generator"])
 
 
-user_query = st.text_input("Enter your question:")
 
-if st.button("Ask") and user_query and uploaded_file:
-    # response = 
-    ask_query(user_query)
-    # st.write(response)
+# Tab 1: CV Analyzer
+if tab == "CV Analyzer":
+    st.title("CV Analyzer")
 
+    uploaded_file = st.file_uploader("Upload a PDF document", type="pdf")
+
+    if uploaded_file is not None:
+        # Generate a unique filename (optional)
+        filename = f"{os.path.splitext(uploaded_file.name)[0]}.pdf"  # Remove extension and add .pdf
+        unique_filename = filename
+        counter = 1
+        while os.path.exists(os.path.join(uploads_dir, unique_filename)):
+            unique_filename = f"{filename[:-4]}_{counter}.pdf"  # Add counter before extension
+            counter += 1
+
+        # Save the uploaded file in the "uploads" directory
+        with open(os.path.join(uploads_dir, unique_filename), "wb") as f:
+            f.write(uploaded_file.read())
+        path = os.path.join(uploads_dir, unique_filename)  # Update path with full directory
+        load_document(path)
+
+        # Automatically summarize the resume after the document is processed
+        st.success(f"Document uploaded and processed! (Saved as: {unique_filename})")
+
+        # Call the resume summarization function
+        summarize_resume()
+
+
+    user_query = st.text_input("Enter your question:")
+
+    if st.button("Ask") and user_query and uploaded_file:
+        # response = 
+        st.caption("Result:")
+        ask_query(user_query)
+        # st.write(response)
+
+# Tab 2: Job Description Generator
+elif tab == "Job Description Generator":
+    st.title("Job Description Generator")
+    
+    job_role = st.text_input("Enter the job role (e.g., Python Developer, Cloud Engineer):")
+    
+    if st.button("Generate Job Description") and job_role:
+        generate_job_description(job_role)
