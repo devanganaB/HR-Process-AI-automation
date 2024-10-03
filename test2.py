@@ -1,16 +1,16 @@
 from langchain_community.llms import HuggingFaceEndpoint
 
 # from getpass import getpass
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
 # HUGGINGFACEHUB_API_TOKEN = getpass()
 
 import os
 
-load_dotenv()
+# load_dotenv()
 
 
-HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+
 
 from langchain.chains import LLMChain
 from langchain_core.prompts import PromptTemplate
@@ -43,8 +43,10 @@ from langchain_pinecone import PineconeVectorStore
 
 import streamlit as st
 
+HUGGINGFACEHUB_API_TOKEN = st.secrets["HUGGINGFACEHUB_API_TOKEN"]
+
 # Retrieve Pinecone API key from environment variable
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
 
 # Initialize Pincone embeddings
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
@@ -55,7 +57,10 @@ index_name = "nlp"
 vector_store = PineconeVectorStore(index_name=index_name, embedding=embeddings)
 
 
+
 # path = "try2\Modi-Ki-Guarantee-Sankalp-Patra-English_2.pdf"
+  
+
 
 def load_document(path):
 
@@ -178,6 +183,48 @@ def generate_qa(candidate_name, global_job_role):
     st.write(questions_result)
 
 
+# import nltk
+# from sklearn.feature_extraction.text import CountVectorizer
+# from sklearn.decomposition import LatentDirichletAllocation as LDA
+# from nltk.corpus import stopwords
+# import string
+
+# nltk.download('stopwords')
+# stop_words = set(stopwords.words('english'))
+
+# # Function to preprocess text
+# def preprocess_text(text):
+#     # Convert to lowercase
+#     text = text.lower()
+#     # Remove punctuation
+#     text = text.translate(str.maketrans('', '', string.punctuation))
+#     # Tokenize and remove stopwords
+#     words = text.split()
+#     words = [word for word in words if word not in stop_words]
+#     return ' '.join(words)
+
+# # Function to perform LDA analysis on the resume
+# def lda_analysis(text_chunks):
+#     # Combine all text chunks into one document
+#     combined_text = " ".join([chunk.page_content for chunk in text_chunks])
+    
+#     # Preprocess text
+#     processed_text = preprocess_text(combined_text)
+    
+#     # Vectorize the text using CountVectorizer
+#     vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words='english')
+#     dtm = vectorizer.fit_transform([processed_text])
+    
+#     # Fit LDA model
+#     lda_model = LDA(n_components=5, random_state=42)  # You can change n_components for different topics
+#     lda_model.fit(dtm)
+    
+#     # Display topics
+#     for idx, topic in enumerate(lda_model.components_):
+#         st.write(f"Topic {idx + 1}:")
+#         st.write([vectorizer.get_feature_names_out()[i] for i in topic.argsort()[-10:]])
+
+
 # Create the "uploads" directory if it doesn't exist
 uploads_dir = "uploads"
 if not os.path.exists(uploads_dir):
@@ -187,7 +234,7 @@ if not os.path.exists(uploads_dir):
 
 # Create sidebar for navigation
 st.sidebar.title("HR Process AI Automation")
-tab = st.sidebar.radio("Select a Tab", ["CV Analyzer", "Job Description Generator", "Generate QA", "LDA analysis"])
+tab = st.sidebar.radio("Select a Tab", ["CV Analyzer", "Job Description Generator", "Generate QA"])
 
 global_job_role=''
 
@@ -244,3 +291,33 @@ elif tab == "Generate QA":
     
     if st.button("Enter Name") and candidate:
         generate_qa(candidate, global_job_role)
+
+
+# # Tab 4: LDA Analysis
+# elif tab == "LDA analysis":
+#     st.title("LDA Topic Modeling on Resume")
+    
+#     uploaded_file = st.file_uploader("Upload a PDF document for LDA", type="pdf")
+
+#     if uploaded_file is not None:
+#         # Generate a unique filename (optional)
+#         filename = f"{os.path.splitext(uploaded_file.name)[0]}.pdf"
+#         unique_filename = filename
+#         counter = 1
+#         while os.path.exists(os.path.join(uploads_dir, unique_filename)):
+#             unique_filename = f"{filename[:-4]}_{counter}.pdf"
+#             counter += 1
+
+#         # Save the uploaded file in the "uploads" directory
+#         with open(os.path.join(uploads_dir, unique_filename), "wb") as f:
+#             f.write(uploaded_file.read())
+#         path = os.path.join(uploads_dir, unique_filename)
+
+#         # Load and split document into chunks
+#         loader = PyPDFLoader(path)
+#         text_chunks = loader.load_and_split()
+
+#         # Perform LDA analysis on the resume
+#         lda_analysis(text_chunks)
+
+    
