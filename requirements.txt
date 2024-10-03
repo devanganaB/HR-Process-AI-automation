@@ -3,6 +3,7 @@ langchain-community
 langchain-core
 streamlit
 PyPDF2
+pypdf
 sentence-transformers
 pinecone-client
 langchain-pinecone
